@@ -1,9 +1,141 @@
+<!DOCTYPE html>
 <html>
 <head>
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta charset="utf-8">
-<title>タイトル</title>
+<title>妹子の・・・</title>
+<meta name="description" content="日本測地系DMSから地図を表示">
+<meta name="author" content="上から読んでも下から読んでも">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/purecss@1.0.0/build/pure-min.css">
+<!--[if lt IE 9]>
+<script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.2/html5shiv.min.js"></script>
+<script src="//cdnjs.cloudflare.com/ajax/libs/respond.js/1.4.2/respond.min.js"></script>
+<![endif]-->
+<style>
+
+body {
+  padding: 5px;
+  text-align: center;
+}
+.button-success,
+.button-erase {
+    color: white;
+    border-radius: 4px;
+    text-shadow: 0 1px 1px rgba(0, 0, 0, 0.2);
+}
+.button-success {background: rgb(28, 184, 65); /* this is a green */}
+.button-erase {background: rgb(202, 60, 60); /* this is a maroon */}
+span {margin-right: 3px;}
+input {width:2em;
+}
+.latitude,.longitude {
+  display: block;
+  margin-bottom: 3px;
+}
+#yahoo_map,
+#google_map {
+  margin-top: 10px;
+  padding: 0;
+  font-weight: bold;
+}
+
+</style>
+<link rel="shortcut icon" href="">
 </head>
 <body>
-毎度おおきに
+  <div>日本測地系(TKY)のDMS表記を入力</div>
+    <form name="dms">
+      <label class="latitude">
+        <span>[N北緯]</span>
+            <input type="tel" id="latitude-deg" maxlength="2" placeholder="度" onkeyup="setNextFocus(this)" />
+            <input type="tel" id="latitude-min" maxlength="2" placeholder="分" onkeyup="setNextFocus(this)" />
+            <input type="tel" id="latitude-sec" maxlength="2" placeholder="秒" onkeyup="setNextFocus(this)" />
+           .<input type="tel" id="latitude-msec" maxlength="1" placeholder="ms" onkeyup="setNextFocus(this)" />
+      </label>
+      <label class="longitude">
+        <span>[E東経]</span>
+            1<input type="tel" id="longitude-deg" maxlength="2" placeholder="度" onkeyup="setNextFocus(this)" />
+            <input type="tel" id="longitude-min" maxlength="2" placeholder="分" onkeyup="setNextFocus(this)" />
+            <input type="tel" id="longitude-sec" maxlength="2" placeholder="秒" onkeyup="setNextFocus(this)" />
+           .<input type="tel" id="longitude-msec" maxlength="1" placeholder="ms" />
+      </label>
+    </form>
+      <button class="button-success pure-button">実行</button>
+      <button class="button-erase pure-button">消去</button>
+
+<div id="yahoo_map"><a href = "" target=”_new”>Yahoo Maps</a></div>
+<div id="google_map"><a href = "" target=”_new”>Google Maps</a></div>
+
+<!-- SCRIPTS -->
+<script src="https://cdn.jsdelivr.net/npm/umbrellajs"></script>
+<script>
+u(".button-success").on('click', function(){
+  //緯度
+    var lat_deg = blank_check(u("#latitude-deg").nodes[0].value);
+    var lat_min = blank_check(u("#latitude-min").nodes[0].value);
+    var lat_sec = blank_check(u("#latitude-sec").nodes[0].value);
+    var lat_msec = blank_check(u("#latitude-msec").nodes[0].value);
+
+    var lat_Decimal = lat_deg + (lat_min/60) + (lat_sec + (lat_msec*0.1))/60/60;
+  //経度
+    var lon_deg = blank_check(u("#longitude-deg").nodes[0].value);
+    var lon_min = blank_check(u("#longitude-min").nodes[0].value);
+    var lon_sec = blank_check(u("#longitude-sec").nodes[0].value);
+    var lon_msec = blank_check(u("#longitude-msec").nodes[0].value);
+
+    var lon_Decimal = (100 + lon_deg) + (lon_min/60) + (lon_sec + (lon_msec*0.1))/60/60;
+  //console.log('緯度DEG10進：' + lat_Decimal + ' 経度DEG10進：' + lon_Decimal);
+
+  var world = get_world_latlon(lat_Decimal, lon_Decimal);
+
+u("#yahoo_map a").attr("href", 'https://map.yahoo.co.jp/maps?lat=' + lat_Decimal + '&lon=' + lon_Decimal + '&datum=tky&z=16&mode=map');
+u("#google_map a").attr("href", 'https://www.google.co.jp/maps/place/' + world.lat + ',' + world.lon);
+  //console.log(world);
+  console.log("早くおうちに帰りましょう");
+});
+
+u(".button-erase").on('click', function(){
+  //緯度
+  u("#latitude-deg").nodes[0].value = '';
+  u("#latitude-min").nodes[0].value = '';
+  u("#latitude-sec").nodes[0].value = '';
+  u("#latitude-msec").nodes[0].value = '';
+  //経度
+  u("#longitude-deg").nodes[0].value = '';
+  u("#longitude-min").nodes[0].value = '';
+  u("#longitude-sec").nodes[0].value = '';
+  u("#longitude-msec").nodes[0].value = '';  
+});
+
+//日本測地系　=>　世界測地系
+function get_world_latlon(lat, lon) {
+  var world_lat = lat - lat * 0.00010695 + lon * 0.000017464 + 0.0046017,
+      world_lon = lon - lat * 0.000046038 - lon * 0.000083043 + 0.010040;
+  return {
+  lat: world_lat,
+  lon: world_lon
+  };
+}
+//空白チェック
+function blank_check(s) {
+  s = isNaN(parseFloat(s)) ? parseFloat('0') : parseFloat(s);
+  //console.log(s);
+  return s;
+}
+//フィールドフォーカスナビ
+function setNextFocus(obj){
+  if(obj.value.length >= obj.maxLength){
+    var es = document.dms.elements;
+    for(var i=0;i<es.length;i++){
+      if(es[i] == obj){
+        es[i+1].focus();
+        break;
+      }
+    }
+  }
+}
+//
+</script>
 </body>
 </html>
